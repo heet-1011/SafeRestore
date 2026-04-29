@@ -4,6 +4,8 @@
 #include <filesystem>
 #include "../include/DriveReader.h"
 #include "../include/Utils.h"
+#include "../include/BaseParser.h"
+#include "../include/Fat32Parser.h"
 
 using namespace std;
 
@@ -88,6 +90,30 @@ int main()
     if (confirm == 'y' || confirm == 'Y')
     {
         cout << "[*] Starting scan logic...\n";
+        BaseParser *recoveryEngine = nullptr;
+
+        if (type == Utils::FileSystemType::FAT32)
+        {
+            recoveryEngine = new Fat32Parser();
+        }
+        else
+        {
+            cout << "[-] Automatic undelete is only supported for FAT32 right now.\n";
+        }
+
+        if (recoveryEngine)
+        {
+            vector<uint8_t> bootSector;
+            if (reader.readSector(0, bootSector, 512))
+            {
+
+                if (recoveryEngine->init(bootSector))
+                {
+                    recoveryEngine->scan(reader, destPath, selectedDrive.size);
+                }
+            }
+            delete recoveryEngine;
+        }
     }
 
     reader.closeDrive();
