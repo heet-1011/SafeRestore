@@ -10,7 +10,8 @@ using namespace std;
 namespace Utils
 {
 
-    enum class FileSystemType {
+    enum class FileSystemType
+    {
         FAT32,
         NTFS,
         EXFAT,
@@ -22,6 +23,8 @@ namespace Utils
         string path;
         string name;
         uint64_t size;
+        bool isExternal;
+        uint64_t usedSize;
     };
 
     string formatSize(uint64_t bytes);
@@ -30,11 +33,16 @@ namespace Utils
 
     vector<DriveInfo> listDrives();
 
-    FileSystemType detectFileSystem(const uint8_t* sector0);
+    FileSystemType detectFileSystem(const uint8_t *sector0);
 
     string fsTypeToString(FileSystemType type);
 
-    FileSystemType getDriveType(const std::string& path);
+    FileSystemType getDriveType(const string &path);
+
+    uint64_t getUsedSpaceForDrive(const string &driveName);
+
+    string getPartitionType(const string &devPath);
+
 }
 
 #endif

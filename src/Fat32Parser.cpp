@@ -105,7 +105,6 @@ void Fat32Parser::recoverFile(DriveReader &reader, const string &outPath, uint32
     if (fileSize == 0)
         return;
 
-    // 1. Open the destination file on your PC
     ofstream outFile(outPath, ios::binary);
     if (!outFile.is_open())
     {
@@ -119,26 +118,20 @@ void Fat32Parser::recoverFile(DriveReader &reader, const string &outPath, uint32
 
     cout << "    [PROCESS] Starting recovery from Cluster " << startCluster << " (" << fileSize << " bytes)\n";
 
-    // 2. Loop until we have recovered all bytes
     while (bytesRemaining > 0)
     {
-        // Calculate the physical address of the current cluster
         uint64_t offset = clusterToByte(currentCluster);
 
-        // Determine how much to read (don't read past the file size)
         uint32_t toRead = min(bytesRemaining, clusterSize);
 
         vector<uint8_t> clusterBuffer;
 
-        // 3. Read the cluster from the physical drive
         if (reader.readSector(offset, clusterBuffer, toRead))
         {
             outFile.write((char *)clusterBuffer.data(), toRead);
 
             bytesRemaining -= toRead;
 
-            // 4. Move to the NEXT consecutive cluster (Contiguous Logic)
-            // We assume the file was stored in a single row on the disk
             currentCluster++;
         }
         else
@@ -147,7 +140,6 @@ void Fat32Parser::recoverFile(DriveReader &reader, const string &outPath, uint32
             break;
         }
 
-        // Safety break: prevent infinite loops if something goes wrong
         if (currentCluster == 0)
             break;
     }
