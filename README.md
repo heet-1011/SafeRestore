@@ -17,7 +17,7 @@
 - Built for extension (NTFS, more coming)  
 ---
 
-## 🖥️ The Interface (Coming Alive)
+## 🖥️ The Interface (will be updating soon...)
 
 We’re building a GUI that feels:
 - Clean  
