@@ -621,7 +621,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
                 selectedSourcePath = selected->property("drivePath").toString();
                 selectedSourceSize = static_cast<uint64_t>(selected->property("driveSize").toULongLong());
                 
-                // Populate destination sidebar, excluding source drive
                 sidebar->clear();
 
                 vector<Utils::DriveInfo> allDrives = Utils::listDrives();
@@ -632,14 +631,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
                     }
                 }
 
-                // Exclude source mount point from tree view
                 if (auto filter = qobject_cast<PathFilterProxyModel*>(destFilter)) {
                     filter->setExcludedPath(sourceMountPoint);
                 }
 
                 QString firstMountPoint = "";
                 for (const auto& drive : allDrives) {
-                    // Exclude the drive being scanned to prevent overwriting
                     if (drive.path == selectedSourcePath.toStdString())
                         continue;
 
