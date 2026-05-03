@@ -39,10 +39,11 @@ uint64_t Fat32Parser::clusterToByte(uint32_t cluster)
     return dataStartByte + (uint64_t)(cluster - 2) * sectorsPerCluster * bytesPerSector;
 }
 
-void Fat32Parser::scan(DriveReader &reader, const string &destPath, uint64_t driveSize)
+vector<RecoveredFileInfo> Fat32Parser::scan(DriveReader &reader, const string &destPath, uint64_t driveSize)
 {
     cout << "[*] Searching for deleted entries in Root Directory...\n";
 
+    vector<RecoveredFileInfo> foundFiles;
     uint64_t rootByteOffset = clusterToByte(rootCluster);
     vector<uint8_t> buffer;
     uint32_t clusterSize = bytesPerSector * sectorsPerCluster;
@@ -59,11 +60,17 @@ void Fat32Parser::scan(DriveReader &reader, const string &destPath, uint64_t dri
                 if (attribute == 0x0F)
                     continue;
 
-                string fileName = "";
-                for (int j = 1; j < 11; ++j)
+                string fileName = "_";
+                string ext = "";
+                for (int j = 1; j < 8; ++j)
                 {
-                    if (buffer[i + j] != ' ')
+                    if (buffer[i + j] != ' ' && (uint8_t)buffer[i + j] != 0x00)
                         fileName += (char)buffer[i + j];
+                }
+                for (int j = 8; j < 11; ++j)
+                {
+                    if (buffer[i + j] != ' ' && (uint8_t)buffer[i + j] != 0x00)
+                        ext += (char)buffer[i + j];
                 }
 
                 uint16_t high = buffer[i + 20] | (buffer[i + 21] << 8);
@@ -87,10 +94,16 @@ void Fat32Parser::scan(DriveReader &reader, const string &destPath, uint64_t dri
                 cout << "    Size: " << fileSize << " bytes\n";
                 cout << "    Start Cluster: " << startCluster << "\n";
 
-                string fullOutPath = destPath + "/" + fileName;
+                string fullPath = destPath + "/" + fileName + (ext.empty() ? "" : "." + ext);
+                RecoveredFileInfo info;
+                info.fullOutPath = fullPath;
+                info.fileName = fileName;
+                info.extension = ext;
+                info.startCluster = startCluster;
+                info.fileSize = fileSize;
+                info.fullPath = fullPath;
 
-                cout << "    Attempting recovery...\n";
-                recoverFile(reader, fullOutPath, startCluster, fileSize);
+                foundFiles.push_back(info);
             }
         }
         if (foundCount == 0)
@@ -98,6 +111,39 @@ void Fat32Parser::scan(DriveReader &reader, const string &destPath, uint64_t dri
             cout << "[-] No deleted files found in the root directory.\n";
         }
     }
+    return foundFiles;
+}
+
+vector<uint8_t> Fat32Parser::readFileData(DriveReader &reader, uint32_t startCluster, uint32_t fileSize)
+{
+    vector<uint8_t> fileData;
+    fileData.reserve(fileSize);
+
+    uint32_t currentCluster = startCluster;
+    uint32_t bytesRemaining = fileSize;
+
+    while (bytesRemaining > 0)
+    {
+        uint64_t offset = clusterToByte(currentCluster);
+        uint32_t toRead = min(bytesRemaining, (uint32_t)(bytesPerSector * sectorsPerCluster));
+
+        vector<uint8_t> clusterBuffer;
+        if (reader.readSector(offset, clusterBuffer, toRead))
+        {
+            fileData.insert(fileData.end(), clusterBuffer.begin(), clusterBuffer.end());
+            bytesRemaining -= toRead;
+            currentCluster++;
+        }
+        else
+        {
+            break;
+        }
+
+        if (currentCluster == 0)
+            break;
+    }
+
+    return fileData;
 }
 
 void Fat32Parser::recoverFile(DriveReader &reader, const string &outPath, uint32_t startCluster, uint32_t fileSize)

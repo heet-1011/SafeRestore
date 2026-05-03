@@ -22,6 +22,7 @@ namespace Utils
     {
         string path;
         string name;
+        string mountPoint;
         uint64_t size;
         bool isExternal;
         uint64_t usedSize;
@@ -42,6 +43,7 @@ namespace Utils
     uint64_t getUsedSpaceForDrive(const string &driveName);
 
     string getPartitionType(const string &devPath);
+    string getMountPoint(const string &driveName);
 
 }
 

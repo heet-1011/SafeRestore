@@ -133,7 +133,12 @@ int runCommandLineMode()
 
                 if (recoveryEngine->init(bootSector))
                 {
-                    recoveryEngine->scan(reader, destPath, selectedDrive.size);
+                    vector<RecoveredFileInfo> foundFiles = recoveryEngine->scan(reader, destPath, selectedDrive.size);
+                    for (const auto &file : foundFiles)
+                    {
+                        cout << "    Attempting recovery...\n";
+                        static_cast<Fat32Parser*>(recoveryEngine)->recoverFile(reader, file.fullPath, file.startCluster, file.fileSize);
+                    }
                 }
             }
             delete recoveryEngine;
@@ -221,7 +226,7 @@ int main(int argc, char *argv[])
     splash.show();
 
     MainWindow win;
-    QTimer::singleShot(3000, [&]()
+    QTimer::singleShot(000, [&]()
                        {
         win.show();
         splash.finish(&win); });

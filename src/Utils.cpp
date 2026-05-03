@@ -121,16 +121,17 @@ namespace Utils
                     info.isExternal = false;
                 }
 
-                info.usedSize = getUsedSpaceForDrive(name);
+            info.usedSize = getUsedSpaceForDrive(name);
+            info.mountPoint = getMountPoint(name);
 
-                if (info.size > 0)
-                {
-                    drives.push_back(info);
-                }
+            if (info.size > 0)
+            {
+                drives.push_back(info);
             }
         }
-        return drives;
     }
+    return drives;
+}
 
     uint64_t getUsedSpaceForDrive(const string &driveName)
     {
@@ -145,13 +146,13 @@ namespace Utils
         {
             string fsname = ent->mnt_fsname;
 
-            if (fsname.find("/dev/" + driveName) == 0)
+            if (fsname == "/dev/" + driveName || fsname.find("/dev/" + driveName) == 0)
             {
                 struct statvfs stats;
                 if (statvfs(ent->mnt_dir, &stats) == 0)
                 {
-                    uint64_t totalSpace = stats.f_blocks * stats.f_frsize;
-                    uint64_t freeSpace = stats.f_bfree * stats.f_frsize;
+                    uint64_t totalSpace = (uint64_t)stats.f_blocks * stats.f_frsize;
+                    uint64_t freeSpace = (uint64_t)stats.f_bfree * stats.f_frsize;
                     totalUsed += (totalSpace - freeSpace);
                 }
             }
@@ -159,6 +160,27 @@ namespace Utils
         endmntent(mounts);
 
         return totalUsed;
+    }
+
+    string getMountPoint(const string &driveName)
+    {
+        FILE *mounts = setmntent("/proc/mounts", "r");
+        if (!mounts)
+            return "";
+
+        struct mntent *ent;
+        string mountPoint = "";
+        while ((ent = getmntent(mounts)) != nullptr)
+        {
+            string fsname = ent->mnt_fsname;
+            if (fsname == "/dev/" + driveName || fsname.find("/dev/" + driveName) == 0)
+            {
+                mountPoint = ent->mnt_dir;
+                break;
+            }
+        }
+        endmntent(mounts);
+        return mountPoint;
     }
 
     string getPartitionType(const string &devPath)

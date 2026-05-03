@@ -21,8 +21,9 @@ private:
 public:
     Fat32Parser();
     bool init(const vector<uint8_t> &bootSector) override;
-    void scan(DriveReader &reader, const string &destPath, uint64_t driveSize) override;
+    vector<RecoveredFileInfo> scan(DriveReader &reader, const string &destPath, uint64_t driveSize) override;
     string getFsName() const override { return "FAT32"; }
+    vector<uint8_t> readFileData(DriveReader &reader, uint32_t startCluster, uint32_t fileSize) override;
     void recoverFile(DriveReader &reader, const string& outPath, uint32_t startCluster, uint32_t fileSize);
 };
 
