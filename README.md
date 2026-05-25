@@ -1,6 +1,6 @@
 <!-- HERO -->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=blur&height=300&color=gradient&text=Input%20text&section=header&fontColor=3b82f6&animation=fadeIn&desc=Tool%20to%20recover%20deleted%20data&descAlignY=61&fontAlignY=45" />
+  <img src="https://capsule-render.vercel.app/api?type=blur&height=300&color=gradient&text=Safe%20Restore&section=header&fontColor=3b82f6&animation=fadeIn&desc=Tool%20to%20recover%20deleted%20data&descAlignY=61&fontAlignY=45" />
 </p>
 <p align="center">
   <i>You deleted it.<br/>We bring it back.</i>
